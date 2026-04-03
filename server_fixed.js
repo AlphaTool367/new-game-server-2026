@@ -19,71 +19,52 @@ function DeH(hexString) {
   return result;
 }
 
-// Main handler for all routes
-app.all("/*", async (req, res) => {
-  const A_U = "https://x-wave-server-ff.netlify.app/max/free/xac.txt"; // Original activation URL
-  const BA_RES_U = "https://x-wave-server-ff.netlify.app/max/free/"; // Original base resource URL
-  const V_K = "X-WAVE-FREE-ONLINE-AC";
-  const E_C = "https://discord.gg/HyM9B4SXGq"; // Discord invite for errors/fallback
+// 1. Home Page (Root URL) - Resolves the "Not Found" error
+app.get("/", (req, res) => {
+  res.status(200).send("<h1>Server is Running Successfully!</h1><p>Available endpoints: /ver, /MajorLogin, /fileinfo, /assetindexer</p>");
+});
 
-  const cuU = req.url;
-  let iAC = false;
+// 2. Handle Version Config Request (The fix for "Failed to retrieve version config: 2")
+app.get("/ver", (req, res) => {
+  res.status(200).send("2");
+});
 
+// 3. Handle Login Request
+app.get("/MajorLogin", async (req, res) => {
+  const BA_RES_U = "https://x-wave-server-ff.netlify.app/max/free/";
+  const E_C = "https://discord.gg/HyM9B4SXGq";
   try {
-    // Check activation key from original source
-    const ache = await fetch(A_U);
-    const ate = await ache.text();
-    if (ate.includes(V_K)) {
-      iAC = true;
-    }
-  } catch (error) {
-    console.error("Activation check failed:", error.message);
-    // Force activation to true for your custom server to prevent failure
-    iAC = true; 
+    const loginRes = await fetch(BA_RES_U + "lo.txtt");
+    const body = await loginRes.text();
+    res.status(200).set("Content-Type", "text/html; charset=utf-8").send(body);
+  } catch (e) {
+    console.error("Error fetching MajorLogin content:", e.message);
+    res.status(200).set("Content-Type", "text/html; charset=utf-8").send(E_C);
   }
+});
 
-  // 1. Handle Version Config Request (The fix for "Failed to retrieve version config: 2")
-  if (cuU.includes("/ver")) {
-    // You can customize the version string here if needed
-    const versionData = "2"; 
-    return res.status(200).send(versionData);
-  }
-
-  // 2. Handle Login Request
-  if (cuU.includes("/MajorLogin")) {
-    const fileN = iAC ? "lo.txtt" : "locn.txt";
-    try {
-      const loginRes = await fetch(BA_RES_U + fileN);
-      const body = await loginRes.text();
-      // Using 200 instead of 400 for better client compatibility
-      return res.status(200).set("Content-Type", "text/html; charset=utf-8").send(body);
-    } catch (e) {
-      console.error("Error fetching MajorLogin content:", e.message);
-      return res.status(200).set("Content-Type", "text/html; charset=utf-8").send(E_C);
-    }
-  }
-
-  // 3. Handle Resource Files (FileInfo, AssetIndexer)
-  let targetFile = "";
-  let contentType = "application/octet-stream";
-
-  if (cuU.includes("/fileinfo")) {
-    targetFile = "inac.txt";
-  } else if (cuU.includes("/assetindexer")) {
-    targetFile = "3ac.txt";
-  } else {
-    // Default response if no endpoint matches
-    return res.status(404).send("Endpoint Not Found");
-  }
-
+// 4. Handle Resource Files (FileInfo, AssetIndexer)
+app.get("/fileinfo", async (req, res) => {
+  const BA_RES_U = "https://x-wave-server-ff.netlify.app/max/free/";
   try {
-    const resourceRes = await fetch(BA_RES_U + targetFile);
+    const resourceRes = await fetch(BA_RES_U + "inac.txt");
     const hexData = await resourceRes.text();
     const decodedBody = DeH(hexData);
-    return res.status(200).set("Content-Type", contentType).send(decodedBody);
+    res.status(200).set("Content-Type", "application/octet-stream").send(decodedBody);
   } catch (e) {
-    console.error("Error fetching resource:", e.message);
-    return res.status(403).send(E_C);
+    res.status(403).send("Error fetching fileinfo");
+  }
+});
+
+app.get("/assetindexer", async (req, res) => {
+  const BA_RES_U = "https://x-wave-server-ff.netlify.app/max/free/";
+  try {
+    const resourceRes = await fetch(BA_RES_U + "3ac.txt");
+    const hexData = await resourceRes.text();
+    const decodedBody = DeH(hexData);
+    res.status(200).set("Content-Type", "application/octet-stream").send(decodedBody);
+  } catch (e) {
+    res.status(403).send("Error fetching assetindexer");
   }
 });
 
