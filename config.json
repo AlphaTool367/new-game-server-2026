@@ -2,7 +2,7 @@
   "version": "2",
   "server": {
     "primary": "https://new-game-server-2026.vercel.app/",
-    "backup": "https://raw.githubusercontent.com/AlphaTool367/new-game-server-2026/main/Config.json",
+    "backup": "https://raw.githubusercontent.com/AlphaTool367/new-game-server-2026/refs/heads/main/config.json",
     "validationKey": "DELTA-NTAN-2026-PRO"
   },
   "url": [
