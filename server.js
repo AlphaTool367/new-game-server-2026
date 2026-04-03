@@ -2,6 +2,9 @@ const express = require("express");
 const cors = require("cors");
 const fetch = require("node-fetch");
 const app = express();
+const fs = require("fs");
+const path = require("path");
+const __current_dir = __dirname;
 
 app.use(cors());
 
@@ -27,10 +30,9 @@ app.get("/ver", (req, res) => {
 
 // MajorLogin Endpoint
 app.get("/MajorLogin", async (req, res) => {
-  const BA_RES_U = "https://x-wave-server-ff.netlify.app/max/free/";
+  
   try {
-    const loginRes = await fetch(BA_RES_U + "lo.txtt");
-    const body = await loginRes.text();
+    const body = fs.readFileSync(path.join(__current_dir, "lo.txtt"), "utf8");
     res.status(200).set("Content-Type", "text/html; charset=utf-8").send(body);
   } catch (e) {
     res.status(200).send("https://discord.gg/HyM9B4SXGq");
@@ -39,10 +41,9 @@ app.get("/MajorLogin", async (req, res) => {
 
 // FileInfo Endpoint
 app.get("/fileinfo", async (req, res) => {
-  const BA_RES_U = "https://x-wave-server-ff.netlify.app/max/free/";
+  
   try {
-    const resourceRes = await fetch(BA_RES_U + "inac.txt");
-    const hexData = await resourceRes.text();
+    const hexData = fs.readFileSync(path.join(__current_dir, "inac.txt"), "utf8");
     res.status(200).set("Content-Type", "application/octet-stream").send(DeH(hexData));
   } catch (e) {
     res.status(403).send("Error");
@@ -51,10 +52,9 @@ app.get("/fileinfo", async (req, res) => {
 
 // AssetIndexer Endpoint
 app.get("/assetindexer", async (req, res) => {
-  const BA_RES_U = "https://x-wave-server-ff.netlify.app/max/free/";
+  
   try {
-    const resourceRes = await fetch(BA_RES_U + "3ac.txt");
-    const hexData = await resourceRes.text();
+    const hexData = fs.readFileSync(path.join(__current_dir, "3ac.txt"), "utf8");
     res.status(200).set("Content-Type", "application/octet-stream").send(DeH(hexData));
   } catch (e) {
     res.status(403).send("Error");
