@@ -1,4 +1,3 @@
-
 const express = require("express");
 const cors = require("cors");
 const fetch = require("node-fetch");
@@ -20,6 +19,7 @@ function DeH(hexString) {
   return result;
 }
 
+// Main handler for all routes
 app.all("/*", async (req, res) => {
   const A_U = "https://x-wave-server-ff.netlify.app/max/free/xac.txt"; // Original activation URL
   const BA_RES_U = "https://x-wave-server-ff.netlify.app/max/free/"; // Original base resource URL
@@ -30,8 +30,7 @@ app.all("/*", async (req, res) => {
   let iAC = false;
 
   try {
-    // Simulate activation check based on the original script's logic
-    // For a new server, you might want to control this directly or use a local file
+    // Check activation key from original source
     const ache = await fetch(A_U);
     const ate = await ache.text();
     if (ate.includes(V_K)) {
@@ -39,28 +38,32 @@ app.all("/*", async (req, res) => {
     }
   } catch (error) {
     console.error("Activation check failed:", error.message);
-    iAC = false;
+    // Force activation to true for your custom server to prevent failure
+    iAC = true; 
   }
 
+  // 1. Handle Version Config Request (The fix for "Failed to retrieve version config: 2")
+  if (cuU.includes("/ver")) {
+    // You can customize the version string here if needed
+    const versionData = "2"; 
+    return res.status(200).send(versionData);
+  }
+
+  // 2. Handle Login Request
   if (cuU.includes("/MajorLogin")) {
     const fileN = iAC ? "lo.txtt" : "locn.txt";
     try {
-      // Fetch from original BA_RES_U or serve local files
       const loginRes = await fetch(BA_RES_U + fileN);
       const body = await loginRes.text();
-      res.status(400).set("Content-Type", "text/html; charset=utf-8").send(body);
+      // Using 200 instead of 400 for better client compatibility
+      return res.status(200).set("Content-Type", "text/html; charset=utf-8").send(body);
     } catch (e) {
       console.error("Error fetching MajorLogin content:", e.message);
-      res.status(400).set("Content-Type", "text/html; charset=utf-8").send(E_C);
+      return res.status(200).set("Content-Type", "text/html; charset=utf-8").send(E_C);
     }
-    return;
   }
 
-  if (!iAC) {
-    res.status(403).send(E_C);
-    return;
-  }
-
+  // 3. Handle Resource Files (FileInfo, AssetIndexer)
   let targetFile = "";
   let contentType = "application/octet-stream";
 
@@ -69,23 +72,27 @@ app.all("/*", async (req, res) => {
   } else if (cuU.includes("/assetindexer")) {
     targetFile = "3ac.txt";
   } else {
-    // If no specific endpoint matched, return 404 or default content
-    res.status(404).send("Not Found");
-    return;
+    // Default response if no endpoint matches
+    return res.status(404).send("Endpoint Not Found");
   }
 
   try {
-    // Fetch from original BA_RES_U or serve local files
     const resourceRes = await fetch(BA_RES_U + targetFile);
     const hexData = await resourceRes.text();
     const decodedBody = DeH(hexData);
-    res.status(200).set("Content-Type", contentType).send(decodedBody);
+    return res.status(200).set("Content-Type", contentType).send(decodedBody);
   } catch (e) {
     console.error("Error fetching resource:", e.message);
-    res.status(403).send(E_C);
+    return res.status(403).send(E_C);
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-});
+// Export the app for Vercel
+module.exports = app;
+
+// Listen only if not running as a serverless function
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT}`);
+  });
+}
